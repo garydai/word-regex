@@ -22,14 +22,16 @@ if match:
 class PatternRegexSet:
 	variable = collections.defaultdict(lambda:0)
 	action = []
+	intention = []
 
 #解析pattern文件
 class Parser:
-	
+
 	RegexSet = PatternRegexSet()
 
 	def ProcessSentence(self, sentence):
-		pattern = ur'^.+='
+		#<aa> = 你好
+		pattern = ur'\s*<[a-zA-Z]\w*>\s*='
 		match = re.match(pattern, sentence)
 		if match:
 			key = self.FetchKey(match.group())
@@ -38,48 +40,105 @@ class Parser:
 			#print sentence[match.end():].strip()
 			value = self.FetchValue(sentence[match.end():].strip())
 			if(value != '' and key != u'<action>'):
-				value = self.ProcessValue(value)
-				print value
 				self.RegexSet.variable[key] = value
-				self.PostProcessValue(value)
+			if(value != '' and key == u'<action>'):
+				self.RegexSet.action.append(value)
+		#print self.RegexSet.action
+	#有些<>被计算了多次 需要refine,可能递归引用次数更好
+	#valpara 里可能还有空格
+	def DFS(self, valpara):
+		retval = u''
+		temp = self.RegexSet.variable.get(valpara)
+		#找不到none
+		if temp:
+			temp = self.RegexSet.variable[valpara]
+		else:
+			temp = valpara
+		temp = temp.split()
+
+		for value in temp:
+			val = u'('
+			i = 0
+			while i < len(value):
+				#不允许一句<>里还有<>
+				if value[i] != u'<':
+					val = val + value[i]
+				else:
+					j = i
+					while j < len(value):
+						if value[j] == u'>':
+							break;
+						j = j + 1
+					if j == len(value):
+						print 'wrong pattern',valpara	
+						return ''
+					elif value[i: j + 1] == valpara:	
+						print 'wrong pattern',valpara	
+						return ''
+					else:
+						val = val + self.DFS(value[i: j + 1])
+						i = j
+				i = i + 1
+			val = val + u')'
+			retval = retval + val
+		return retval
+
 
 	#替换value中的变量
-	def PostProcessValue(self, value):
-		pattern = ur'<.*>'
-		match = re.search(pattern, value)
-		if match:
-			print match.group()
+	def PostProcessValue(self):
+		for key in self.RegexSet.variable:
+			value = self.RegexSet.variable[key]
+			sentence = u''
+			value = value.split()
+			for v in value:	
+				PostValue = u''
+				PostValue = PostValue + self.DFS(v)
+				sentence = sentence + PostValue
+			#print sentence
 
-	#记录]位置
-	def ProcessValue(self, value):
-		length = len(value)
-		lst = []
-		val = u'('
-		for i in range(length):
-			if value[i] == u'[':
-				val = val + u'('
-			elif value[i] == u']':
-				val = val + u')?'
-			else:
-				val = val + value[i]
-		val = val + u')'
-		return val
+
+	def ProcessAction(self):
+		for intention in self.RegexSet.action:
+
+			#print '+', intention
+			temp = self.DFS(intention) 
+			val = u''
+			for char in temp:
+				if char == u']':
+					val = val + u')?'
+				elif char == u'[':
+					val = val + u'('
+				else:
+					val = val + char
+			#print val
+			val = val + u'$'
+			self.RegexSet.intention.append(val)
 
 	def LoadPattern(self, f):
 		for line in file(f):
 			line = line.replace('\n','')
 			line = line.decode('utf-8')
+			#print u'action' + line
 			self.ProcessSentence(line)
 
+		self.PostProcessValue()
+		self.ProcessAction()
 
 	def FetchKey(self, key):
 		key = key.strip(' =')
 		return key
 
 	def FetchValue(self, value):
+		value = value.strip()
 		return value
 
 if __name__ == '__main__':
 	parser = Parser()
 	parser.LoadPattern('pattern.txt')
-	print parser.RegexSet.variable
+	iput = u'帮我放首歌曲'
+	for pattern in parser.RegexSet.intention:
+		match = re.match(pattern, iput)
+		#print pattern
+		if match:
+			print match.group()
+	#print parser.RegexSet.variable

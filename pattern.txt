@@ -1,6 +1,7 @@
-<helpme> = 帮我|给我 <play> <aaa>
-<play> = 播放|播
+<helpme> = 帮我|给我|<play>
+<play> = 播放|播|放
 <listen> = 听
 <music> = 音乐|歌曲
-<action> = <helpme> <play> <music>|歌曲 [好吗]
-<action> = 我要 <listen> <music>
+<unit> = 首
+<action> = <helpme> <play> <unit><music>|歌 [好吗]
+<action> = 我要 <listen> <music>|歌
