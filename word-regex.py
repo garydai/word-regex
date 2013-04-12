@@ -110,8 +110,9 @@ class Parser:
 					val = val + u'('
 				else:
 					val = val + char
-			#print val
+			
 			val = val + u'$'
+		#	print val			
 			self.RegexSet.intention.append(val)
 
 	def LoadPattern(self, f):
@@ -135,10 +136,18 @@ class Parser:
 if __name__ == '__main__':
 	parser = Parser()
 	parser.LoadPattern('pattern.txt')
-	iput = u'帮我放首歌曲'
-	for pattern in parser.RegexSet.intention:
-		match = re.match(pattern, iput)
-		#print pattern
-		if match:
-			print match.group()
+	for line in file('sentence.txt'):
+		line = line.replace('\n','')
+		line = line.decode('utf-8')	
+		line = line.strip()
+		flag = 1
+		for pattern in parser.RegexSet.intention:
+			match = re.match(pattern, line)
+			#print pattern
+			if match:
+				print match.group()
+				flag = 0
+		if flag:
+			print line, 'match fail'
+
 	#print parser.RegexSet.variable
