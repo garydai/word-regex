@@ -1,3 +1,4 @@
+//test
 {helpme} = 帮我|给我|{play}
 {play} = 播放|播|放
 {listen} = 听

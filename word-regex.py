@@ -33,7 +33,7 @@ class Parser:
 		#<aa> = 你好
 		pattern = ur'\s*\{[a-zA-Z]\w*\}\s*='
 		match = re.match(pattern, sentence)
-		print match.group()
+		#print match.group()
 		if match:
 			key = self.FetchKey(match.group())
 
@@ -119,8 +119,10 @@ class Parser:
 	def LoadPattern(self, f):
 		for line in file(f):
 			line = line.replace('\n','')
-			line = line.decode('utf-8')
+			line = line.decode('utf-8')		
 			#print u'action' + line
+			if line[0] == u'/':
+				continue
 			self.ProcessSentence(line)
 
 		self.PostProcessValue()
