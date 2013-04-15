@@ -31,17 +31,18 @@ class Parser:
 
 	def ProcessSentence(self, sentence):
 		#<aa> = 你好
-		pattern = ur'\s*<[a-zA-Z]\w*>\s*='
+		pattern = ur'\s*\{[a-zA-Z]\w*\}\s*='
 		match = re.match(pattern, sentence)
+		print match.group()
 		if match:
 			key = self.FetchKey(match.group())
 
 			#print match.end()
 			#print sentence[match.end():].strip()
 			value = self.FetchValue(sentence[match.end():].strip())
-			if(value != '' and key != u'<action>'):
+			if(value != '' and key != u'{action}'):
 				self.RegexSet.variable[key] = value
-			if(value != '' and key == u'<action>'):
+			if(value != '' and key == u'{action}'):
 				self.RegexSet.action.append(value)
 		#print self.RegexSet.action
 	#有些<>被计算了多次 需要refine,可能递归引用次数更好
@@ -61,12 +62,12 @@ class Parser:
 			i = 0
 			while i < len(value):
 				#不允许一句<>里还有<>
-				if value[i] != u'<':
+				if value[i] != u'{':
 					val = val + value[i]
 				else:
 					j = i
 					while j < len(value):
-						if value[j] == u'>':
+						if value[j] == u'}':
 							break;
 						j = j + 1
 					if j == len(value):
